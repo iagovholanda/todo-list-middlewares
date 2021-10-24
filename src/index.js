@@ -10,44 +10,49 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  const { username } = request.headers
+  const { username } = request.headers;
 
-  const user = users.find(user => user.username === username)
-  if(!user){
-    return response.status(404).json({ error: "User not found" });
+  const checkUserExists = users.find(user => user.username === username);
+
+  if (!checkUserExists){
+    return response.status(404).json({ error: 'User not found!'});
   }
 
-  request.user = user
-  return next()
+  request.user = checkUserExists;
+
+  return next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-   const { user } = request
+  const { user } = request;
 
-   if((user.pro === false && user.todos.length < 10) || user.pro === true){
-     return next()
-   } 
-   
-   return response.status(403).json({ error: 'Free plan limit reached. Please upgrade to pro.' });
+  if (!user.pro && user.todos.length >= 10) {
+    return response.status(403).json({ error: "Max free todos reached!"})
+  }
 
+  return next();
 }
 
 function checksTodoExists(request, response, next) {
-   const { username } = request.headers
-   const { id } = request.params
-
+    const { id } = request.params;
+    const { username } = request.headers;
+    
    const user = users.find(user => user.username === username)
-   if(!user){
-     return response.status(404).json('User not exists')
-   }
 
-  if(!validate(id)){
-    return response.status(400).json('Invalid Identifier')
+   const validId = validate(id)
+   
+   if (!user) {
+    return response.status(404).json({ error: "User does not exists!" });
   }
 
-  const todo = users.todos.find(todo => todo.id === id)
-  if(!todo) {
-    return response.status(404).json('Todo not exists')
+  if (!validId) {
+    return response.status(400).json({ error: "Id is not valid!" });
+  }
+
+  const todo = user.todos.find(todo => todo.id === id);
+
+  if (!todo) {
+    return response.status(404).json({ error: "Todo does not exists!" });
   }
   
   request.user = user
